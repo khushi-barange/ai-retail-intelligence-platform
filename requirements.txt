@@ -1,0 +1,32 @@
+# Data
+pandas
+numpy
+
+# Database
+psycopg2-binary
+sqlalchemy
+
+# Visualization
+matplotlib
+seaborn
+plotly
+streamlit
+
+# Machine Learning
+scikit-learn
+xgboost
+
+# Forecasting
+prophet
+
+# AI
+openai
+
+# API
+fastapi
+uvicorn
+
+# Utilities
+python-dotenv
+jupyter
+notebook
