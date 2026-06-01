@@ -3,7 +3,7 @@
 # Uses: google-genai package (new SDK)
 
 import pandas as pd
-from google import genai
+from groq import Groq
 from pathlib import Path
 from dotenv import load_dotenv
 import os
@@ -18,8 +18,8 @@ REPORTS   = BASE / "reports"
 REPORTS.mkdir(exist_ok=True)
 
 # Initialize Gemini client
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-MODEL  = "gemini-2.0-flash-lite"
+client = Groq(api_key="GROQ_API_KEY")
+MODEL  = "llama-3.1-8b-instant"
 
 
 # ── Load business data ────────────────────────────────────────────────────────
@@ -51,12 +51,13 @@ def load_business_data():
 
 # ── Core Gemini call ──────────────────────────────────────────────────────────
 def ask_gemini(prompt):
-    time.sleep(3)  # avoid rate limits
-    response = client.models.generate_content(
+    time.sleep(2)
+    response = client.chat.completions.create(
         model=MODEL,
-        contents=prompt
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=1024
     )
-    return response.text
+    return response.choices[0].message.content
 
 
 # ── Executive summary ─────────────────────────────────────────────────────────
