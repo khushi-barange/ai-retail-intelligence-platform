@@ -17,7 +17,7 @@ This platform solves all four problems with data.
 ---
 
 ## 🏗️ Architecture
-
+```
 Raw Data (CSV)
 ↓
 Python ETL Pipeline
@@ -33,7 +33,7 @@ AI Insights Engine (Groq LLaMA)
 FastAPI Backend
 ↓
 Streamlit Dashboard
-
+```
 ---
 
 ## ✨ Features
@@ -83,7 +83,7 @@ Streamlit Dashboard
 ---
 
 ## 📁 Project Structure
-
+```
 ai-retail-intelligence-platform/
 ├── data/
 │   ├── raw/                  # Original CSV files
@@ -111,7 +111,7 @@ ai-retail-intelligence-platform/
 ├── reports/                  # AI-generated reports
 ├── requirements.txt
 └── Dockerfile
-
+```
 ---
 
 ## 🚀 Quick Start
