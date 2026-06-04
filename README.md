@@ -140,7 +140,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=retailx_db
 DB_USER=postgres
-DB_PASSWORD=postgres
+DB_PASSWORD=YOUR_PASSWORD
 GROQ_API_KEY=your_groq_api_key
 ```
 
