@@ -1,14 +1,10 @@
 # dashboard/app.py
-# Purpose: Streamlit multi-page analytics dashboard
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from pathlib import Path
-import requests
 
-# ── Config ────────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="RetailX Analytics",
     page_icon="🛒",
@@ -20,7 +16,6 @@ BASE      = Path(__file__).resolve().parent.parent
 PROCESSED = BASE / "data" / "processed"
 REPORTS   = BASE / "reports"
 
-# ── Load data ─────────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
     master    = pd.read_csv(PROCESSED / "master_orders.csv", parse_dates=["order_purchase_timestamp"])
@@ -28,13 +23,12 @@ def load_data():
     forecast  = pd.read_csv(PROCESSED / "sales_forecast.csv", parse_dates=["date"])
     churn     = pd.read_csv(PROCESSED / "customer_churn_scores.csv")
     products  = pd.read_csv(PROCESSED / "products_clean.csv")
-    items     = pd.read_csv(PROCESSED / "category_recommendations.csv")
-    return master, customers, forecast, churn, products, items
+    recs      = pd.read_csv(PROCESSED / "recommendation_lookup.csv")
+    return master, customers, forecast, churn, products, recs
 
-master, customers, forecast, churn, products, items = load_data()
+master, customers, forecast, churn, products, recs = load_data()
 delivered = master[master["order_status"] == "delivered"]
 
-# ── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.image("https://img.icons8.com/color/96/shop.png", width=60)
 st.sidebar.title("RetailX Analytics")
 st.sidebar.markdown("---")
@@ -51,15 +45,12 @@ st.sidebar.metric("Total Revenue", f"R${master['total_revenue'].sum():,.0f}")
 st.sidebar.metric("Total Customers", f"{len(customers):,}")
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 1 — EXECUTIVE DASHBOARD
-# ══════════════════════════════════════════════════════════════════════════════
+# PAGE 1 - EXECUTIVE DASHBOARD
 if page == "Executive Dashboard":
-    st.title("📊 Executive Dashboard")
+    st.title("Executive Dashboard")
     st.markdown("Real-time business performance overview")
     st.markdown("---")
 
-    # KPI row
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Total Revenue",    f"R${master['total_revenue'].sum():,.0f}")
     col2.metric("Total Orders",     f"{len(master):,}")
@@ -69,7 +60,6 @@ if page == "Executive Dashboard":
 
     st.markdown("---")
 
-    # Monthly revenue trend
     col1, col2 = st.columns([2, 1])
 
     with col1:
@@ -99,7 +89,6 @@ if page == "Executive Dashboard":
         fig.update_layout(height=300)
         st.plotly_chart(fig, use_container_width=True)
 
-    # Review scores + delivery
     col1, col2 = st.columns(2)
 
     with col1:
@@ -134,18 +123,16 @@ if page == "Executive Dashboard":
         st.plotly_chart(fig, use_container_width=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 2 — CUSTOMER ANALYTICS
-# ══════════════════════════════════════════════════════════════════════════════
+# PAGE 2 - CUSTOMER ANALYTICS
 elif page == "Customer Analytics":
-    st.title("👥 Customer Analytics")
+    st.title("Customer Analytics")
     st.markdown("---")
 
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Total Customers",    f"{len(customers):,}")
-    col2.metric("Repeat Customers",   f"{(customers['total_orders']>1).sum():,}")
-    col3.metric("Repeat Rate",        f"{(customers['total_orders']>1).mean()*100:.1f}%")
-    col4.metric("Churn Rate",         f"{customers['is_churned'].mean()*100:.1f}%")
+    col1.metric("Total Customers",  f"{len(customers):,}")
+    col2.metric("Repeat Customers", f"{(customers['total_orders']>1).sum():,}")
+    col3.metric("Repeat Rate",      f"{(customers['total_orders']>1).mean()*100:.1f}%")
+    col4.metric("Churn Rate",       f"{customers['is_churned'].mean()*100:.1f}%")
 
     st.markdown("---")
 
@@ -178,7 +165,7 @@ elif page == "Customer Analytics":
         fig.update_layout(showlegend=False, height=320)
         st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader("🚨 High Churn Risk Customers")
+    st.subheader("High Churn Risk Customers")
     high_risk = churn[churn["churn_risk"] == "High"].nlargest(20, "churn_probability")[
         ["customer_unique_id", "total_orders", "total_spent", "recency_days", "churn_probability"]
     ].round(3)
@@ -188,35 +175,32 @@ elif page == "Customer Analytics":
     st.subheader("Churn Risk Distribution")
     risk_counts = churn["churn_risk"].value_counts()
     col1, col2, col3 = st.columns(3)
-    col1.metric("🔴 High Risk",   f"{risk_counts.get('High', 0):,}")
-    col2.metric("🟡 Medium Risk", f"{risk_counts.get('Medium', 0):,}")
-    col3.metric("🟢 Low Risk",    f"{risk_counts.get('Low', 0):,}")
+    col1.metric("High Risk",   f"{risk_counts.get('High', 0):,}")
+    col2.metric("Medium Risk", f"{risk_counts.get('Medium', 0):,}")
+    col3.metric("Low Risk",    f"{risk_counts.get('Low', 0):,}")
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 3 — PRODUCT ANALYTICS
-# ══════════════════════════════════════════════════════════════════════════════
+# PAGE 3 - PRODUCT ANALYTICS
 elif page == "Product Analytics":
-    st.title("📦 Product Analytics")
+    st.title("Product Analytics")
     st.markdown("---")
 
     cat_revenue = (
-    pd.read_csv(PROCESSED / "recommendation_lookup.csv")
-    .groupby("if_customer_bought")["co_purchase_count"]
-    .sum()
-    .sort_values(ascending=False)
-    .head(15)
-    .reset_index()
-)
-cat_revenue.columns = ["Category", "Revenue"]
+        recs.groupby("if_customer_bought")["co_purchase_count"]
+        .sum()
+        .sort_values(ascending=False)
+        .head(15)
+        .reset_index()
+    )
+    cat_revenue.columns = ["Category", "Co-purchases"]
 
-    st.subheader("Top 15 Categories by Revenue")
+    st.subheader("Top 15 Categories by Co-purchase Frequency")
     fig = px.bar(
-        cat_revenue, x="Revenue", y="Category",
+        cat_revenue, x="Co-purchases", y="Category",
         orientation="h",
-        color="Revenue",
+        color="Co-purchases",
         color_continuous_scale="Blues",
-        labels={"Revenue": "Total Revenue (R$)", "Category": ""}
+        labels={"Co-purchases": "Co-purchase Count", "Category": ""}
     )
     fig.update_layout(height=500, showlegend=False, yaxis=dict(autorange="reversed"))
     st.plotly_chart(fig, use_container_width=True)
@@ -224,10 +208,10 @@ cat_revenue.columns = ["Category", "Revenue"]
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("Top 10 Categories — Market Share")
+        st.subheader("Top 10 Categories - Market Share")
         top10 = cat_revenue.head(10)
         fig = px.pie(
-            top10, values="Revenue", names="Category",
+            top10, values="Co-purchases", names="Category",
             color_discrete_sequence=px.colors.qualitative.Set3
         )
         fig.update_layout(height=350)
@@ -238,12 +222,10 @@ cat_revenue.columns = ["Category", "Revenue"]
         st.dataframe(cat_revenue.head(10), use_container_width=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 4 — SALES FORECAST
-# ══════════════════════════════════════════════════════════════════════════════
+# PAGE 4 - SALES FORECAST
 elif page == "Sales Forecast":
-    st.title("📈 Sales Forecast")
-    st.markdown("Prophet ML model — 90-day revenue forecast")
+    st.title("Sales Forecast")
+    st.markdown("Prophet ML model - 90-day revenue forecast")
     st.markdown("---")
 
     col1, col2, col3 = st.columns(3)
@@ -253,7 +235,6 @@ elif page == "Sales Forecast":
 
     st.markdown("---")
 
-    # Historical + forecast
     monthly_hist = (
         delivered.set_index("order_purchase_timestamp")
         .resample("ME")["total_revenue"]
@@ -297,12 +278,10 @@ elif page == "Sales Forecast":
     st.dataframe(forecast.round(2), use_container_width=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 5 — AI INSIGHTS
-# ══════════════════════════════════════════════════════════════════════════════
+# PAGE 5 - AI INSIGHTS
 elif page == "AI Insights":
-    st.title("🤖 AI Insights")
-    st.markdown("Powered by Google Gemini")
+    st.title("AI Insights")
+    st.markdown("Powered by Groq LLaMA")
     st.markdown("---")
 
     report_path = REPORTS / "ai_business_report.txt"
@@ -310,23 +289,19 @@ elif page == "AI Insights":
     if report_path.exists():
         with open(report_path, "r", encoding="utf-8") as f:
             report = f.read()
-
-        sections = report.split("---") if "---" in report else [report]
-
-        st.subheader("📋 AI Executive Summary")
+        st.subheader("AI Executive Summary")
         st.info(report)
-
     else:
         st.warning("AI report not generated yet.")
         st.markdown("""
         **To generate the AI report:**
-        1. Make sure your Gemini API key is in `.env`
+        1. Make sure your Groq API key is in `.env`
         2. Run: `python ai/ai_insights.py`
         3. Refresh this page
         """)
 
     st.markdown("---")
-    st.subheader("📊 Key Business Metrics")
+    st.subheader("Key Business Metrics")
 
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Revenue",    f"R${master['total_revenue'].sum():,.0f}")
