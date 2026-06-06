@@ -6,7 +6,6 @@ venv/
 
 # Data files — too large for GitHub
 data/raw/*.csv
-data/processed/*.csv
 
 # Python cache
 __pycache__/
