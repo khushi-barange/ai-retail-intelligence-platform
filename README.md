@@ -1,5 +1,7 @@
 # 🛒 AI Retail Intelligence Platform
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-brightgreen)](https://ai-retail-intelligence-platform.onrender.com)
+
 An end-to-end retail analytics platform built with Python, PostgreSQL, Machine Learning, and Generative AI. Built to solve real business problems for a fictional Brazilian e-commerce company **RetailX**.
 
 ---
@@ -220,6 +222,11 @@ docker run -p 8501:8501 retailx-platform
 - Repeat purchase rate calculation
 
 ---
+
+## 🌐 Live Demo
+
+**Dashboard:** https://ai-retail-intelligence-platform.onrender.com
+
 
 ## 👩‍💻 Author
 
