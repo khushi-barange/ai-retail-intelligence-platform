@@ -28,7 +28,7 @@ def load_data():
     forecast  = pd.read_csv(PROCESSED / "sales_forecast.csv", parse_dates=["date"])
     churn     = pd.read_csv(PROCESSED / "customer_churn_scores.csv")
     products  = pd.read_csv(PROCESSED / "products_clean.csv")
-    items     = pd.read_csv(BASE / "data" / "raw" / "olist_order_items_dataset.csv")
+    items     = pd.read_csv(PROCESSED / "category_recommendations.csv")
     return master, customers, forecast, churn, products, items
 
 master, customers, forecast, churn, products, items = load_data()
@@ -201,15 +201,14 @@ elif page == "Product Analytics":
     st.markdown("---")
 
     cat_revenue = (
-        products[["product_id","product_category_name_english"]]
-        .merge(items, on="product_id")
-        .groupby("product_category_name_english")["price"]
-        .sum()
-        .sort_values(ascending=False)
-        .head(15)
-        .reset_index()
-    )
-    cat_revenue.columns = ["Category", "Revenue"]
+    pd.read_csv(PROCESSED / "recommendation_lookup.csv")
+    .groupby("if_customer_bought")["co_purchase_count"]
+    .sum()
+    .sort_values(ascending=False)
+    .head(15)
+    .reset_index()
+)
+cat_revenue.columns = ["Category", "Revenue"]
 
     st.subheader("Top 15 Categories by Revenue")
     fig = px.bar(
