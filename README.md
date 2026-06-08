@@ -1,6 +1,6 @@
 # 🛒 AI Retail Intelligence Platform
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-brightgreen)](https://ai-retail-intelligence-platform.onrender.com)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B)](https://retailx-analytics.streamlit.app/)
 
 An end-to-end retail analytics platform built with Python, PostgreSQL, Machine Learning, and Generative AI. Built to solve real business problems for a fictional Brazilian e-commerce company **RetailX**.
 
@@ -225,7 +225,7 @@ docker run -p 8501:8501 retailx-platform
 
 ## 🌐 Live Demo
 
-**Dashboard:** https://ai-retail-intelligence-platform.onrender.com
+**Dashboard:** https://retailx-analytics.streamlit.app/
 
 
 ## 👩‍💻 Author
